@@ -104,7 +104,13 @@ namespace champ
                 //reachability check
                 float target_to_foot = sqrtf(pow(x, 2) + pow(z,2));
                 if(target_to_foot >= (abs(l1) + abs(l2)))
+                {
+                    //mark as invalid so the caller's isnan() check disregards
+                    //the whole plan instead of executing uninitialized joint values
+                    upper_leg_joint = NAN;
+                    lower_leg_joint = NAN;
                     return;
+                }
 
                 //source: https://robotacademy.net.au/lesson/inverse-kinematics-for-a-2-joint-robot-arm-using-geometry/
                 lower_leg_joint = leg.knee_direction() * acosf((pow(z, 2) + pow(x, 2) - pow(l1 ,2) - pow(l2 ,2)) / (2 * l1 * l2));

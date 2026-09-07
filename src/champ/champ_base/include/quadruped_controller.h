@@ -73,6 +73,8 @@ class QuadrupedController: public rclcpp::Node
     champ::LegController leg_controller_;
     champ::Kinematics kinematics_;
 
+    float target_joint_positions_[12] = {0};
+
     std::vector<std::string> joint_names_;
 
     bool publish_foot_contacts_;

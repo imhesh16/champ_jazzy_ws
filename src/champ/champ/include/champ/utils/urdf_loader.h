@@ -75,7 +75,23 @@ namespace champ
                 if (i>0){
                     ref_link = links_param[i-1];
                 }else {
-                    ref_link = model.getRoot()->name;
+                    //champ assumes the URDF root link is the robot's body
+                    //frame. If a "links_map.base" link name is provided
+                    //(e.g. "base_link"), use it instead of the URDF's
+                    //structural root, since robots that add a base_footprint
+                    //frame above base_link (common ROS/Nav2 convention)
+                    //would otherwise have that extra offset leak into every
+                    //leg's hip translation.
+                    rclcpp::Parameter base_link_param_("base_link_param", std::string(""));
+                    bool has_base_link = nh->get_parameter("links_map.base", base_link_param_);
+                    if(has_base_link && !base_link_param_.as_string().empty())
+                    {
+                        ref_link = base_link_param_.as_string();
+                    }
+                    else
+                    {
+                        ref_link = model.getRoot()->name;
+                    }
                 }
 
                 end_link = links_param[i];

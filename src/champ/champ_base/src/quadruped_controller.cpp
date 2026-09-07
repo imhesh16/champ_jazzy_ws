@@ -100,17 +100,19 @@ QuadrupedController::QuadrupedController():
 
 void QuadrupedController::controlLoop_()
 {
-    float target_joint_positions[12];
     geometry::Transformation target_foot_positions[4];
     bool foot_contacts[4];
 
     body_controller_.poseCommand(target_foot_positions, req_pose_);
 
     leg_controller_.velocityCommand(target_foot_positions, req_vel_, rosTimeToChampTime(clock_.now()));
-    kinematics_.inverse(target_joint_positions, target_foot_positions);
+    //target_joint_positions_ persists across calls: if a foot target is
+    //unreachable, kinematics_.inverse() leaves it untouched so the robot
+    //holds its last valid pose instead of publishing uninitialized memory.
+    kinematics_.inverse(target_joint_positions_, target_foot_positions);
 
     publishFootContacts_(foot_contacts);
-    publishJoints_(target_joint_positions);
+    publishJoints_(target_joint_positions_);
 }
 
 void QuadrupedController::cmdVelCallback_(const geometry_msgs::msg::Twist::SharedPtr msg)
