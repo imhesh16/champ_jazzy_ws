@@ -1,0 +1,10 @@
+build/
+install/
+log/
+
+**/__pycache__/
+*.pyc
+
+src/robot_dog/build/
+src/robot_dog/install/
+src/robot_dog/log/

@@ -1,0 +1,36 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 200
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    all_legs_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+all_legs_trajectory_controller:
+  ros__parameters:
+    joints:
+      - front_left_shoulder
+      - front_left_leg
+      - front_left_foot
+      - front_right_shoulder
+      - front_right_leg
+      - front_right_foot
+      - rear_left_shoulder
+      - rear_left_leg
+      - rear_left_foot
+      - rear_right_shoulder
+      - rear_right_leg
+      - rear_right_foot
+
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+      - velocity
+
+    allow_partial_joints_goal: false
+    interpolate_from_desired_state: false
+    interpolation_method: splines
