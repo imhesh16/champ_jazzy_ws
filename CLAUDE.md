@@ -70,6 +70,29 @@ ajustar con margen de seguridad normal (lejos del límite físico) para
 lograr la postura de pie deseada, porque el mapeo completo queda
 consistente con la convención de CHAMP.
 
+## Convención de signos de los ángulos (verificada numéricamente, 25 sept)
+
+Con la regla de la mano derecha sobre los ejes del URDF (`shoulder` = +X,
+`leg` y `foot` = +Y), y con X hacia adelante, Y hacia la izquierda, Z arriba:
+- `q2` > 0 lleva el fémur (y el pie) **hacia atrás** (-X). La postura de pie de
+  CHAMP a 0.13 m es q2 = +1.1445 (fémur hacia atrás-abajo) y q3 = -1.997 (tibia
+  hacia adelante-abajo): las rodillas apuntan hacia atrás (`knee_orientation ">>"`).
+- `q3` se mide desde la prolongación del fémur; es negativo con la rodilla flexionada.
+- `q1` > 0 lleva el pie hacia +Y.
+- Cinemática directa: x = -L2 sin q2 - L3 sin(q2+q3); y = s L1 cos q1 + R sin q1;
+  z = s L1 sin q1 - R cos q1, con R = L2 cos q2 + L3 cos(q2+q3) y s = +1 izquierda,
+  -1 derecha. La inversa (Capítulo 4 de la tesis) coincide con `kinematics.h` de CHAMP
+  a 1e-15 rad (4000 objetivos por pata). Script de verificación:
+  `tesis_emilio_valenzuela/imagenes/fuentes_figuras/verificacion_cinematica.py`.
+- **No** sumar offsets a q2 "a ojo" para mover un pie: el signo es contraintuitivo
+  (q2 mayor = pie más atrás). `hardware/scripts_pruebas/creep_una_pata.py` calcula los
+  ángulos con la cinemática inversa de CHAMP a partir de posiciones del pie en metros.
+  La versión anterior (offsets de q2 y q1 con el signo contrario) caminaba hacia
+  atrás y desplazaba el peso hacia la pata levantada.
+- Estabilidad estática: con las 4 patas en el rectángulo de apoyo (pies a x=±0.093,
+  y=±0.082 m del centro) el centro del cuerpo queda a 0.0 mm del borde del triángulo al
+  levantar una pata; desplazarlo al centroide da 41 mm de margen.
+
 ## IMU Hiwonder IM10A (USB)
 
 - Conectada por USB (chip adaptador CH340, mismo tipo que usan
