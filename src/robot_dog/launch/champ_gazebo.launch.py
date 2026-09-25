@@ -5,19 +5,33 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
     AppendEnvironmentVariable,
+    DeclareLaunchArgument,
     IncludeLaunchDescription,
     RegisterEventHandler,
     TimerAction,
 )
+from launch.conditions import IfCondition, UnlessCondition
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, FindExecutable
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration
 
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
+
+    # headless:=true corre Gazebo solo como servidor de fisica, sin la
+    # ventana 3D (flag nativo "-s" de gz sim). Util en equipos sin GPU
+    # compatible con OpenGL 3.3 (ej. Raspberry Pi 5) o sin monitor --
+    # lo que realmente hace falta para generar la trayectoria real
+    # hacia el puente ESP32 es el servidor, no la GUI.
+    headless_arg = DeclareLaunchArgument(
+        "headless",
+        default_value="false",
+        description="true = Gazebo sin GUI (solo servidor de fisica)",
+    )
+    headless = LaunchConfiguration("headless")
 
     robot_dog_share = get_package_share_directory("robot_dog")
     ros_gz_sim_share = get_package_share_directory("ros_gz_sim")
@@ -80,18 +94,29 @@ def generate_launch_description():
         }],
     )
 
-    # Inicia Gazebo Harmonic con el mundo vacío.
-    gazebo = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                ros_gz_sim_share,
-                "launch",
-                "gz_sim.launch.py",
-            )
-        ),
+    # Inicia Gazebo Harmonic con el mundo vacío. Dos variantes segun
+    # "headless": con GUI (normal) o solo servidor (flag "-s" nativo
+    # de gz sim, sin ventana 3D).
+    gz_sim_launch = os.path.join(
+        ros_gz_sim_share,
+        "launch",
+        "gz_sim.launch.py",
+    )
+
+    gazebo_with_gui = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(gz_sim_launch),
         launch_arguments={
             "gz_args": f"-r -v 3 {world_file}",
         }.items(),
+        condition=UnlessCondition(headless),
+    )
+
+    gazebo_headless = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(gz_sim_launch),
+        launch_arguments={
+            "gz_args": f"-r -v 3 -s {world_file}",
+        }.items(),
+        condition=IfCondition(headless),
     )
 
     # Publica el reloj de Gazebo en ROS 2.
@@ -117,7 +142,7 @@ def generate_launch_description():
             "-topic", "/robot_description",
             "-x", "0.0",
             "-y", "0.0",
-            "-z", "0.0",
+            "-z", "0.25",
             "-allow_renaming", "true",
         ],
     )
@@ -223,11 +248,14 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        headless_arg,
+
         # Debe ejecutarse antes de iniciar Gazebo.
         gazebo_resource_path,
 
         robot_state_publisher,
-        gazebo,
+        gazebo_with_gui,
+        gazebo_headless,
         clock_bridge,
 
         delayed_spawn,

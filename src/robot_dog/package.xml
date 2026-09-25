@@ -44,6 +44,10 @@
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>trajectory_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <!-- Puente ROS 2 -> ESP32 (micro-ROS) -->
+  <exec_depend>rclpy</exec_depend>
 
   <!-- Pruebas y comprobaciones -->
   <test_depend>ament_lint_auto</test_depend>

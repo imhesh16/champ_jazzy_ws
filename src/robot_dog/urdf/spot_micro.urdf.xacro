@@ -32,7 +32,7 @@
 
   <xacro:property name="toe_radius" value="0.020" />
   <xacro:property name="toe_width" value="0.020" />
-  <xacro:property name="shift" value="0.055" />
+  <xacro:property name="shift" value="0.043" />
   <xacro:property name="shiftx" value="0.093" />
   <xacro:property name="shifty" value="0.039" />
 
@@ -234,7 +234,7 @@
   <joint name="base_footprint_joint" type="fixed">
     <parent link="base_footprint"/>
     <child link="base_link"/>
-    <origin xyz="0 0 0.26" rpy="0 0 0"/>
+    <origin xyz="0 0 0.15" rpy="0 0 0"/>
   </joint>
 
   <link name="base_link">
