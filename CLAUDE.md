@@ -95,10 +95,9 @@ Con la regla de la mano derecha sobre los ejes del URDF (`shoulder` = +X,
 
 ## IMU Hiwonder IM10A (USB)
 
-- Conectada por USB (chip adaptador CH340, mismo tipo que usan
-  algunas placas ESP32 — verificar con `lsusb`/`udevadm info` cuál
-  puerto es cuál si hay más de un dispositivo serie conectado a la
-  vez).
+- Conectada por USB (chip adaptador CH340, `1a86:7523`; es el único
+  CH340 del robot — el ESP32 y el LiDAR usan CP2102). En la Raspberry
+  Pi aparece como `/dev/imu` (regla udev, ver sección "Puertos serie").
 - **Baudrate: 9600.** Protocolo estándar Hiwonder/WitMotion (igual al
   usado en sus módulos WT901/JY901): paquetes de 11 bytes, byte 0 =
   `0x55`, byte 1 = tipo de dato, bytes 2-9 = 4 valores `int16` little
@@ -111,16 +110,18 @@ Con la regla de la mano derecha sobre los ejes del URDF (`shoulder` = +X,
 - Verificado leyendo datos reales del puerto y decodificando: valores
   de roll/pitch coherentes con la IMU apoyada plana (~0°), y cambian
   en tiempo real al mover/inclinar el sensor.
-- Aún no integrada a ROS2 (no existe todavía un nodo publicando
-  `sensor_msgs/Imu`); pendiente si se necesita para `robot_localization`
-  o el filtro de estado de CHAMP.
+- Integrada a ROS 2 con `src/robot_dog/scripts/imu_publisher.py` (puerto por
+  defecto `/dev/imu`) → `/imu/data` (`sensor_msgs/Imu`) a ~10 Hz. Aún no se
+  usa en `robot_localization` ni en el filtro de estado de CHAMP.
 
 ## LiDAR YDLIDAR T-mini Plus (rebrand Yahboom/EAI, TOF 360°, 12m)
 
-- Conectado por USB (adaptador Silicon Labs CP210x — distinto chip al
-  CH340 del ESP32/IMU, así que ambos pueden distinguirse por
-  `lsusb`/`udevadm info` si están conectados a la vez).
-- **Puerto/baudrate confirmados**: `/dev/ttyUSB0` @ `230400`. Modelo
+- Conectado por USB (adaptador Silicon Labs CP2102, `10c4:ea60`, el
+  MISMO chip y número de serie `0001` que el adaptador del ESP32, por
+  eso la regla udev los distingue por puerto físico). En la Raspberry
+  Pi aparece como `/dev/lidar`; parámetros propios con ese puerto en
+  `src/robot_dog/config/ydlidar_tmini_plus.yaml`.
+- **Baudrate confirmado**: `230400` (en esta PC aparecía como `/dev/ttyUSB0`; en la Pi usar `/dev/lidar`). Modelo
   confirmado por el propio dispositivo al conectar: `Tmini Plus`,
   firmware 1.2.
 - SDK: `~/YDLidar-SDK` (clonado de `YDLIDAR/YDLidar-SDK`, compilado con
@@ -293,3 +294,29 @@ antes de aplicar (coincidencias dígito por dígito con valores viejos
 - Nodo puente ROS 2: `src/robot_dog/scripts/joint_trajectory_bridge.py` (`/all_legs_trajectory_controller/joint_trajectory` → `/esp32/joint_targets`).
 - Sketch ESP32: `~/Arduino/esp32_quadruped_bridge/esp32_quadruped_bridge.ino` — incluye el mapeo real de canales del PCA9685 y la calibración de ticks (0-4095 @ 50Hz, no microsegundos) de los 12 servos, ya cargada.
 - Agente: compilado desde fuente en `~/microros_ws/` (no viene por apt para Jazzy).
+
+## Puertos serie, corriente USB y WiFi en la Raspberry Pi (verificado 26 sept)
+
+- Regla udev `/etc/udev/rules.d/99-robot-dog.rules` (copia en
+  `hardware/udev/99-robot-dog.rules`): `/dev/imu` por fabricante (CH340),
+  `/dev/lidar` y `/dev/esp32` por `ID_PATH` (`platform-xhci-hcd.0-usb-0:1:1.0`
+  y `...0:2:1.0`), porque ambos son CP2102 con serie `0001`. **No
+  intercambiar el LiDAR y el ESP32 de puerto.** Verificado que los nombres
+  sobreviven a un reinicio aunque cambie la numeración `ttyUSB*`.
+- Sin USB-PD de 5 A la Pi 5 limita los USB a 600 mA en total, y el LiDAR
+  se detecta pero no arranca ("Failed to start the lidar"). En el robot la
+  Pi va por GPIO desde el XL4016, así que siempre aplica. Se agregó
+  `usb_max_current_enable=1` en `/boot/firmware/config.txt` (respaldo
+  `config.txt.bak_antes_usb_current`) → 1,6 A; LiDAR OK a 10 Hz. Con el
+  cargador oficial de 27 W la Pi tampoco negoció PD (hay una
+  actualización de EEPROM pendiente, no instalada).
+- El firmware del ESP32 intenta la sesión micro-ROS solo al arrancar: el
+  agente (`--dev /dev/esp32 -b 115200`) debe estar corriendo antes, o hay
+  que resetear el ESP32 (RTS) después de lanzarlo. Si el LED azul
+  parpadea rápido, no detectó el PCA9685 (pasó por un cable 3V3 suelto).
+- WiFi: `wifi.powersave` estaba activo (3) y causaba "No route to host"
+  intermitente desde el PC; desactivado (2) en
+  `/etc/NetworkManager/conf.d/99-robot-wifi-powersave-off.conf`. ROS 2 con
+  valores por defecto en ambos equipos (dominio 0, descubrimiento SUBNET,
+  Fast DDS): desde el PC se reciben los tópicos de la Pi (`/imu/data` a
+  9,95 Hz medido en el PC).

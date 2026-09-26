@@ -17,7 +17,9 @@
 //
 // Transporte micro-ROS: serie (USB), 115200 baudios. Requiere correr
 // el micro-ROS agent en la RPi5:
-//   ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyUSB0 -b 115200
+//   ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/esp32 -b 115200
+// (/dev/esp32 es el nombre fijo creado por hardware/udev/99-robot-dog.rules;
+// en un PC sin esa regla, usar el /dev/ttyUSB* que corresponda.)
 
 #include <micro_ros_arduino.h>
 #include <stdio.h>

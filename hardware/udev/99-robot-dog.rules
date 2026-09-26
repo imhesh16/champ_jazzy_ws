@@ -1,0 +1,8 @@
+# Nombres fijos para los dispositivos serie del robot cuadrupedo.
+# La IMU usa un CH340 (unico en el robot) y se identifica por fabricante/producto.
+# El LiDAR y el ESP32 usan ambos un CP2102 con el mismo numero de serie (0001),
+# por lo que se identifican por el puerto fisico de la Raspberry Pi 5 en que
+# estan conectados (no intercambiarlos de puerto).
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", SYMLINK+="imu", GROUP="dialout", MODE="0660"
+SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:1:1.0", SYMLINK+="lidar", GROUP="dialout", MODE="0660"
+SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:2:1.0", SYMLINK+="esp32", GROUP="dialout", MODE="0660"

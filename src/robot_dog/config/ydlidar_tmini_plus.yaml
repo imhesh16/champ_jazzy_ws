@@ -1,0 +1,28 @@
+# Parametros del LiDAR YDLIDAR T-mini Plus para el robot fisico.
+# Copia de params/Tmini-Plus-SH.yaml de ydlidar_ros2_driver, con el puerto fijo.
+# Uso: ros2 launch ydlidar_ros2_driver ydlidar_launch.py params_file:=<ruta a este archivo>
+ydlidar_ros2_driver_node:
+  ros__parameters:
+    port: /dev/lidar  # nombre fijo creado por hardware/udev/99-robot-dog.rules
+    frame_id: laser_frame
+    ignore_array: ""
+    baudrate: 230400
+    lidar_type: 0
+    device_type: 0
+    intensity: true
+    intensity_bit: 16
+    isSingleChannel: false
+    frequency: 10.0
+    sample_rate: 4
+    abnormal_check_count: 4
+    fixed_resolution: true
+    reversion: true
+    inverted: true
+    auto_reconnect: true
+    support_motor_dtr: false
+    angle_max: 180.0
+    angle_min: -180.0
+    range_max: 12.0
+    range_min: 0.03
+    invalid_range_is_inf: false
+    debug: false

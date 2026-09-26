@@ -25,7 +25,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Imu
 import serial
 
-PORT = "/dev/ttyUSB0"
+PORT = "/dev/imu"  # nombre fijo creado por hardware/udev/99-robot-dog.rules
 BAUD = 9600
 FRAME_ID = "imu_link"
 PUBLISH_ON_ANGLE_ONLY = False  # si True, solo publica cuando llega un paquete 0x53
